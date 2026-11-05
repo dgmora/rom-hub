@@ -175,3 +175,18 @@ Gaseous or Retrom. MIT licensed.
 
 The CLI and ROMarr can share host-side Archive.org authentication. Start with
 `rom-hub auth login archive-org`; see [setup, storage and testing](docs/ARCHIVE_ORG_AUTH.md).
+
+## Search result metadata
+
+`rom-hub search "Crisis Core" --platform psp --live --json` emits one JSON object
+with `results`, `statuses` and `complete`. Results include the exact `source_id`,
+`url`, `size_bytes`, `platform`, `plugin` and provider-specific `extra` metadata.
+For Archive.org ZIP members, `extra` identifies the item, ZIP and member path.
+Source statuses report errors, catalogue/live provenance and capped results.
+`complete` means every searched source responded successfully; it does not prove
+exhaustive source or census coverage.
+
+JSON includes every variant and source on the selected game page; `--limit` and
+`--offset` retain their normal game-based meaning. `--no-group` returns all raw
+results instead, as it does for the text listing. `--json` changes output only;
+`--live` still performs the same network discovery.

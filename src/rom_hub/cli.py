@@ -23,7 +23,7 @@ import os
 import sqlite3
 import sys
 from contextlib import ExitStack, contextmanager, nullcontext
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import backends, emuassets, env, secrets
@@ -1231,7 +1231,7 @@ def _cmd_auth(args) -> int:
 def _cmd_search(args) -> int:
     plugins = Registry(default_root()).installed()
     searchable = [p for p in plugins if p.enabled and "search" in p.manifest.capabilities]
-    if not searchable:
+    if not searchable and not args.json:
         print("no plugins available for search — install one with 'rom-hub plugin install'")
         return 0
 
@@ -1258,6 +1258,18 @@ def _cmd_search(args) -> int:
             )
     finally:
         fetcher.close()
+
+    if args.json:
+        rows = outcome.results
+        if not args.no_group:
+            page = paginate(group_results(rows, args.query), args.limit, args.offset)
+            rows = [row for group in page.groups for row in group.results]
+        print(json.dumps({
+            "results": [row.model_dump() for row in rows],
+            "statuses": [asdict(status) for status in outcome.statuses],
+            "complete": outcome.complete,
+        }, indent=2))
+        return EXIT_OK
 
     if args.no_group:
         _print_flat(outcome.results)
@@ -3201,6 +3213,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-group",
         action="store_true",
         help="do not merge anything: one line per raw result, as before",
+    )
+    search.add_argument(
+        "--json", action="store_true",
+        help="full result fields and source statuses as JSON; includes every variant on the page",
     )
     search.set_defaults(func=_cmd_search)
 

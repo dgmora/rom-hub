@@ -1335,3 +1335,58 @@ def test_platforms_installed_narrows_to_this_host(tmp_path, monkeypatch, capsys)
     monkeypatch.setenv("ROM_HUB_HOME", str(tmp_path / "home"))
     assert main(["platforms", "--installed"]) == 0
     assert "no enabled plugins" in capsys.readouterr().out
+
+
+def test_json_search_preserves_source_metadata_and_failure_status(tmp_path, monkeypatch, capsys):
+    from types import SimpleNamespace
+    from rom_hub import cli
+    from rom_hub.dispatcher import SearchOutcome, PluginStatus
+    from rom_hub.types import SearchResult
+    source = SimpleNamespace(enabled=True, manifest=SimpleNamespace(capabilities=["search"]))
+    monkeypatch.setattr(cli.Registry, "installed", lambda self: [source])
+    monkeypatch.setenv("ROM_HUB_HOME", str(tmp_path))
+    result = SearchResult(source_id="zip:set:games.zip:Game.iso", title="Game (USA)",
+        platform="psp", plugin="archive-org", url="https://archive.org/download/set/games.zip/Game.iso",
+        extra={"set_item": "set", "set_zip": "games.zip", "set_file": "Game.iso"})
+    outcome = SearchOutcome(results=[result], statuses=[
+        PluginStatus("archive-org", True, 1, served_from="catalogue", capped=True),
+        PluginStatus("other", False, error="unavailable"),
+    ])
+    monkeypatch.setattr(cli, "search_all", lambda *args, **kwargs: outcome)
+    assert main(["search", "Game", "--json"]) == 0
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["results"] == [result.model_dump()]
+    assert payload["complete"] is False
+    assert payload["statuses"][0]["served_from"] == "catalogue"
+    assert payload["statuses"][0]["capped"] is True
+    assert payload["statuses"][1]["error"] == "unavailable"
+
+
+def test_json_search_without_installed_plugins(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ROM_HUB_HOME", str(tmp_path))
+    assert main(["search", "Game", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "results": [], "statuses": [], "complete": True,
+    }
+
+
+def test_json_search_pages_games_and_keeps_each_source(tmp_path, monkeypatch, capsys):
+    from types import SimpleNamespace
+    from rom_hub import cli
+    from rom_hub.dispatcher import SearchOutcome
+    from rom_hub.types import SearchResult
+    source = SimpleNamespace(enabled=True, manifest=SimpleNamespace(capabilities=["search"]))
+    monkeypatch.setattr(cli.Registry, "installed", lambda self: [source])
+    monkeypatch.setenv("ROM_HUB_HOME", str(tmp_path))
+    rows = [SearchResult(source_id=str(i), title=title, plugin="demo", platform="psp")
+        for i, title in enumerate(["Game A (USA)", "Game A (Europe)", "Game B (USA)"])]
+    monkeypatch.setattr(cli, "search_all", lambda *args, **kwargs: SearchOutcome(results=rows))
+    assert main(["search", "Game", "--json", "--limit", "1"]) == 0
+    first = json.loads(capsys.readouterr().out)
+    assert {r["source_id"] for r in first["results"]} == {"0", "1"}
+    assert main(["search", "Game", "--json", "--limit", "1", "--offset", "1"]) == 0
+    second = json.loads(capsys.readouterr().out)
+    assert [r["source_id"] for r in second["results"]] == ["2"]
+    assert main(["search", "Game", "--json", "--no-group"]) == 0
+    assert json.loads(capsys.readouterr().out)["results"] == [r.model_dump() for r in rows]
