@@ -1,6 +1,6 @@
 {
   "catalog_version": "1",
-  "updated": "2026-11-01",
+  "updated": "2026-11-12",
   "plugins": [
     {
       "slug": "aminet",
@@ -37,10 +37,10 @@
       "author": "BlizzHacker",
       "repository": "https://github.com/BlizzHacker/rom-hub-archive-org",
       "install": "https://github.com/BlizzHacker/rom-hub-archive-org",
-      "download": "https://github.com/BlizzHacker/rom-hub-archive-org/archive/refs/tags/v0.4.0.tar.gz",
-      "version": "0.4.0",
-      "ref": "v0.4.0",
-      "updated": "2026-08-08",
+      "download": "https://github.com/BlizzHacker/rom-hub-archive-org/archive/refs/tags/v0.4.1.tar.gz",
+      "version": "0.4.1",
+      "ref": "v0.4.1",
+      "updated": "2026-11-12",
       "rpp_version": "1",
       "capabilities": [
         "search",
@@ -57,9 +57,9 @@
       "search_only": false,
       "key_required": false,
       "in_tree": false,
-      "description": "Searches the Internet Archive's software collections — including the 24,746-item Console Living Room — by title, imports the item's payload file, and carries what the Archive says about the game's controls.",
+      "description": "Searches Internet Archive software collections and individual files/ZIP members inside configured ROM sets (retro-roms-best-set, tiny-best-set-go), imports with M3U multi-disc support and optional host login, and carries game control instructions.",
       "terms": "Mixed, and the Archive says which is which. The default `softwarelibrary` + `consolelivingroom` scope holds public-domain and abandonware software alongside commercial titles still under copyright — the Internet Archive hosts them under its own library and DMCA position, not under a licence that passes to you. Items the Archive will only let you play in a browser are marked `stream_only` (6,816 of the Console Living Room's 24,746), and the importer refuses those outright rather than working around the restriction — the `stream` capability resolves them to the page the Archive itself plays them on. Access is public and unauthenticated; `/advancedsearch.php`, `/metadata/` and `/download/` are not disallowed by the Archive's robots.txt.",
-      "comments": "Reaches whole collections rather than a first page: `advancedsearch.php` refuses to page past 10,000 results, but answers any size in one request when no `page` is given — 10,045 downloadable Mega Drive items in ~2s. The scrape API that Archive.org's own error message recommends is documented and unused: it silently drops an `emulator:` filter and returns the whole collection instead. `metadata.emulator` maps to a RomM platform through an exact-match table with no fallback, now covering the console half of the Archive; an unmapped emulator fails loudly as \"needs mapping\" rather than filing a ROM under a guessed system, which is why ~60 MAME romset names are still unmapped on purpose. Control information (`controller`, `emulator_instructions`, `notes`) travels into `raw_manual_metadata` verbatim — 16,127 of 24,746 items carry some, and the prose is never parsed into a key-to-button table this plugin would have invented. The census partitions `softwarelibrary` into 27 disjoint `item_size` windows rather than into sub-collections, which overlap: in one 500-item sample 440 items were in `softwarelibrary_apple` and 433 in `softwarelibrary_apple_contribs` and all 500 in `softwarelibrary` itself, so summing them would report more entries than the collection has. Each window's declared total comes from its own `rows=0` request; measured 2026-08-08, the 27 sum to 250,509, which is what the collection's own numFound answered.",
+      "comments": "Reaches whole collections rather than a first page: `advancedsearch.php` refuses to page past 10,000 results, but answers any size in one request when no `page` is given — 10,045 downloadable Mega Drive items in ~2s. The scrape API that Archive.org's own error message recommends is documented and unused: it silently drops an `emulator:` filter and returns the whole collection instead. `metadata.emulator` maps to a RomM platform through an exact-match table with no fallback, now covering the console half of the Archive; an unmapped emulator fails loudly as \"needs mapping\" rather than filing a ROM under a guessed system, which is why ~60 MAME romset names are still unmapped on purpose. Control information (`controller`, `emulator_instructions`, `notes`) travels into `raw_manual_metadata` verbatim — 16,127 of 24,746 items carry some, and the prose is never parsed into a key-to-button table this plugin would have invented. The census partitions `softwarelibrary` into 27 disjoint `item_size` windows rather than into sub-collections, which overlap: in one 500-item sample 440 items were in `softwarelibrary_apple` and 433 in `softwarelibrary_apple_contribs` and all 500 in `softwarelibrary` itself, so summing them would report more entries than the collection has. Each window's declared total comes from its own `rows=0` request; measured 2026-08-08, the 27 sum to 250,509, which is what the collection's own numFound answered. v0.4.1 (contributed by dgmora) adds live per-file and inside-ZIP member search across configured ROM sets (`file_sets`), automatic platform inference, M3U multi-disc companion planning, and optional host-side Archive.org authentication via `rom-hub auth login archive-org`.",
       "platforms": [
         "acpc",
         "adventure-vision",
@@ -80,6 +80,7 @@
         "colecovision",
         "cpet",
         "creativision",
+        "dc",
         "dos",
         "epoch-super-cassette-vision",
         "fairchild-channel-f",
@@ -93,12 +94,21 @@
         "lynx",
         "mac",
         "mega-duck-slash-cougar-boy",
+        "n64",
+        "nds",
         "neo-geo-pocket",
         "neo-geo-pocket-color",
+        "neogeoaes",
+        "neogeomvs",
         "nes",
+        "ngc",
         "odyssey-2",
+        "ps2",
+        "psp",
         "psx",
+        "saturn",
         "sega32",
+        "segacd",
         "sg1000",
         "sms",
         "snes",
@@ -108,6 +118,7 @@
         "tg16",
         "trs-80-color-computer",
         "trs-80-mc-10",
+        "turbografx-cd",
         "vectrex",
         "vic-20",
         "wonderswan",
@@ -222,6 +233,36 @@
       "terms": "Twelve projects and several different answers, and the plugin prints each one in the listing rather than burying it here. mGBA and Cemu are MPL-2.0; PCSX2, melonDS and simple64 are GPL-3.0; Flycast, Vita3K, PPSSPP, MAME and xemu are GPL-2.0; ares is ISC; and **DuckStation is not open source at all** — it relicensed to CC BY-NC-ND 4.0, which permits non-commercial redistribution of the unmodified build and forbids derivatives. Five of the twelve report `NOASSERTION` on GitHub and the five answers are all different, which is why every value was read from the project's own licence file rather than off the SPDX field: ares is ISC with third-party notices appended, PPSSPP is GPL-2 with a PSPSDK BSD notice at the top of the same file, MAME's COPYING opens with a trademark notice, xemu carries QEMU's per-component list, and DuckStation is the CC licence above. A sixth NOASSERTION project, BizHawk, was rejected outright on what its own LICENSE says. Nothing here redistributes anything: the plugin names the project's own release URL and the Hub fetches it once, for the operator who asked, which is the same act as clicking the asset on the release page. `api.github.com` serves no robots.txt; `github.com`'s robots.txt disallows `/*/download` to crawlers, and nothing here crawls — one named asset, once, on an explicit `cores install`, following no links and indexing nothing. No emulator here ships or requires firmware from this plugin.",
       "comments": "The second plugin exercising `cores`, and the argument for using it rather than inventing a capability is in the README: CoreArtifact already carries every field a standalone emulator needs, the host already installs into `<cores_dir>/<slug>/`, and a new capability would duplicate all of `cores` to express a `.so`-versus-`.AppImage` distinction nothing downstream acts on. Deliberately **not** the `assets` capability: a shader is data an emulator reads, this is the emulator. Asset selection is an anchored regex per (project, target) that must match **exactly one** file — upstream naming is not one convention but twelve, and any rule loose enough to cover them also covers a .flatpak, a -symbols.7z, an -installer.exe, a .zsync delta manifest and a -dbg- build. Zero matches and two matches both refuse. All 44 (project, target) cells were verified live against the real releases on 2026-08-01, each matching exactly one asset. xemu forced a hyphen-free version pattern: the general one permits a hyphen, so `xemu-{version}-x86_64.AppImage` also fullmatches `xemu-0.8.136-dbg-x86_64.AppImage` — select would have refused that as ambiguous rather than installing a debug build, but a pattern that describes the asset exactly beats one that relies on being caught. macos/x86_64 and macos/arm64 join macos/universal because Vita3K and Cemu ship a file per architecture where everyone else ships one fat build; they are not synonyms, so nothing is listed twice. **Three projects are absent and none of it is an oversight.** Dolphin publishes no GitHub releases (/releases/latest answers 404 and /releases an empty array) and its own site sits behind a bunny.net JavaScript challenge that 403s even /robots.txt. RetroArch publishes releases that are source only — v1.22.2 attaches exactly one asset, retroarch-sourceonly-1.22.2.tar.xz — and its binaries live on buildbot.libretro.com under a directory that serves no .index-extended and no machine-readable listing, only an h5ai JavaScript file browser. BizHawk was rejected on licensing: its own LICENSE says the repository as-is \"should be considered an illegal combination of several incompatible GPL licenses\" and tells anyone interested to \"assume it is a minefield\", and the release assets are that combination compiled. Release assets 302 to `release-assets.githubusercontent.com` — exactly one hop — which is declared; `objects.githubusercontent.com` is deliberately not, because it is not in today's chain. One API call per project means a full listing costs twelve of the unauthenticated 60-per-hour budget, so `only` narrows the requests and not just the output.",
       "platforms": []
+    },
+    {
+      "slug": "exo2romm",
+      "name": "eXo2romm (eXoDOS to RomM Repackager)",
+      "author": "derkommutator / BlizzHacker",
+      "repository": "https://github.com/BlizzHacker/rom-hub-exo2romm",
+      "install": "https://github.com/BlizzHacker/rom-hub-exo2romm",
+      "download": "https://github.com/BlizzHacker/rom-hub-exo2romm/archive/refs/tags/v0.1.0.tar.gz",
+      "version": "0.1.0",
+      "ref": "v0.1.0",
+      "updated": "2026-11-12",
+      "rpp_version": "1",
+      "capabilities": [
+        "cores"
+      ],
+      "network": [
+        "api.github.com",
+        "github.com",
+        "raw.githubusercontent.com"
+      ],
+      "status": "ok",
+      "search_only": false,
+      "key_required": false,
+      "in_tree": false,
+      "description": "Repackages eXoDOS game zips for standalone RomM / ROMarr playback by rewriting pack-root .\\eXoDOS\\<game> dosbox.conf mounts cleanly. Credits derkommutator (inspired to assist with more users having this).",
+      "terms": "Original upstream eXo2romm (https://github.com/derkommutator/eXo2romm) by derkommutator is dedicated to the public domain under The Unlicense, which permits free use, modification, and redistribution. This ROM Hub plugin is likewise released under The Unlicense and inspired to assist with more users having this workflow directly inside ROM Hub and ROMarr.",
+      "comments": "Credits derkommutator (`https://github.com/derkommutator/eXo2romm`) — inspired to assist with more users having standalone eXoDOS zips in RomM and ROMarr. Pairs the RPP v1 `cores` capability (`exo2romm.cores:Cores`, fetching `derkommutator/eXo2romm`'s `eXo2romm.sh` reference script over GitHub) with `exo2romm.repackager`, a pure-Python cross-platform implementation that runs cleanly on Alpine Linux, Debian, macOS, and Windows without requiring `bash`, `awk`, or `zip`/`unzip`. Rewrites `mount`/`imgmount`/`boot` lines (with optional `@`) on a copy of `$DOS_DIR/<top>/dosbox.conf` using non-regex literal matching, preserves CRLF line endings and `#`/`rem` comments, skips existing outputs safely, avoids duplicate zip entries when grafting `<top>/dosbox.conf`, and guards against zip-slip path traversal.",
+      "platforms": [
+        "dos"
+      ]
     },
     {
       "slug": "hasheous",
